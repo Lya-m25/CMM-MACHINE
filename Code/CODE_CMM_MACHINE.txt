@@ -1,0 +1,292 @@
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27,20,4);
+
+#include "Arduino.h"
+#include "uTimerLib.h"
+// khai báo trục x
+#define stepx 3
+#define dirx 2
+#define enax 4
+// khai báo trục y
+#define stepy 5
+#define diry 6
+#define enay 7
+// khai báo trục z
+#define stepz 8
+#define dirz 9
+#define enaz 10
+// khai báo nút nhấn
+#define x1 11
+#define x2 12
+#define y1 A0
+#define y2 A1
+#define z1 A2
+#define z2 A3
+// khai báo chạm
+#define measure 13
+bool a,b,c,d,e,f;
+int dc1 = 1, dc2 = 1, tg;
+int countx,county,countz;// đếm số xung các trục
+float x,y,z;
+int dem =0;
+int check = 1;
+int A[3] = {0,0,0};
+int B[3] = {0,0,0};
+
+void timed_function() 
+{
+measure_touch();
+xet_theo_suon();
+if(digitalRead(x1)==1)
+{
+  a = digitalRead(x1) + a ;
+}
+else a = 0 ;
+
+if(digitalRead(x2)==1)
+{
+  b = digitalRead(x2) + b;
+}
+else b = 0 ;
+
+if(digitalRead(y1)==1)
+{
+  c = digitalRead(y1) + c;
+}
+else c = 0 ;
+
+if(digitalRead(y2)==1)
+{
+  d = digitalRead(y2) + d;
+}
+else d = 0 ;
+
+if(digitalRead(z1)==1)
+{
+  e = digitalRead(z1) + e;
+}
+else e = 0 ;
+
+if(digitalRead(z2)==1)
+{
+  f = digitalRead(z2) + f;
+}
+else f = 0 ;
+
+}
+void xet_theo_suon()
+{
+  if(digitalRead(measure)==1)
+  {
+    if(digitalRead(measure)==0)
+    {
+      tg=1;
+      Serial.print("a");
+    }
+  }
+  else
+  {
+    if(digitalRead(measure)==1)
+    {
+      tg=0;
+      Serial.print("b");
+    }
+  }
+}
+
+void setup() {
+  pinMode(stepx,OUTPUT);digitalWrite(stepx,0);
+  pinMode(dirx,OUTPUT);digitalWrite(dirx,0);
+  pinMode(enax,OUTPUT);digitalWrite(enax,1);
+
+  pinMode(stepy,OUTPUT);digitalWrite(stepy,0);
+  pinMode(diry,OUTPUT);digitalWrite(diry,0);
+  pinMode(enay,OUTPUT);digitalWrite(enay,1);
+
+  pinMode(stepz,OUTPUT);digitalWrite(stepz,0);
+  pinMode(dirz,OUTPUT);digitalWrite(dirz,0);
+  pinMode(enaz,OUTPUT);digitalWrite(enaz,1);
+
+  pinMode(x1,INPUT_PULLUP);
+  pinMode(x2,INPUT_PULLUP);
+  pinMode(y1,INPUT_PULLUP);
+  pinMode(y2,INPUT_PULLUP);
+  pinMode(z1,INPUT_PULLUP);
+  pinMode(z2,INPUT_PULLUP);
+
+  pinMode(measure,INPUT_PULLUP);
+
+  lcd.init();    // initialize the lcd 
+  lcd.backlight();
+  TimerLib.setInterval_us(timed_function, 800);// timer 1
+  Serial.begin(9600);
+}
+
+void measure_touch()
+{
+  
+  if(digitalRead(measure) == 0  && check == 1)
+  {
+    dem++;
+    check=0;
+  }
+  if(digitalRead(measure) == 1 && check==0)
+  {
+    check=1;
+    
+  }
+  
+  return dem;
+}
+float calculate()
+{ 
+  x = abs(countx)/25;
+  y = abs(county)/25;
+  z=  abs(countz)/25;
+  
+  float length_object = sqrt(x*x+y*y+z*z);
+  return length_object;
+}
+
+
+void x_tien()
+{
+  digitalWrite(enax,0);
+  digitalWrite(dirx, 1);
+  digitalWrite(stepx,!digitalRead(stepx));
+  delayMicroseconds(500);
+  digitalWrite(stepx,!digitalRead(stepx));
+  delayMicroseconds(500);
+}
+
+void x_lui()
+{
+  digitalWrite(enax,0);
+  digitalWrite(dirx, 0);
+  digitalWrite(stepx,!digitalRead(stepx));
+  delayMicroseconds(500);
+  digitalWrite(stepx,!digitalRead(stepx));
+  delayMicroseconds(500);
+}
+
+void y_tien()
+{
+  digitalWrite(enay,0);
+  digitalWrite(diry, 1);
+  digitalWrite(stepy,!digitalRead(stepy));
+  delayMicroseconds(900);
+  digitalWrite(stepy,!digitalRead(stepy));
+  delayMicroseconds(900);
+}
+
+void y_lui()
+{
+  digitalWrite(enay,0);
+  digitalWrite(diry, 0);
+  digitalWrite(stepy,!digitalRead(stepy));
+  delayMicroseconds(900);
+  digitalWrite(stepy,!digitalRead(stepy));
+  delayMicroseconds(900);
+}
+
+void z_tien()
+{
+  digitalWrite(enaz,0);
+  digitalWrite(dirz, 1);
+  digitalWrite(stepz,!digitalRead(stepz));
+  delayMicroseconds(500);
+  digitalWrite(stepz,!digitalRead(stepz));
+  delayMicroseconds(500);
+}
+
+void z_lui()
+{
+  digitalWrite(enaz,0);
+  digitalWrite(dirz, 0);
+  digitalWrite(stepz,!digitalRead(stepz));
+  delayMicroseconds(500);
+  digitalWrite(stepz,!digitalRead(stepz));
+  delayMicroseconds(500);
+}
+void loop() 
+{
+  digitalWrite(enax,1);
+  digitalWrite(enay,1);
+  digitalWrite(enaz,1);
+if(a>0 && b==0 && dc1 == 1 )
+{
+  x_tien();
+  
+  if(tg==1)  
+  {Serial.print("b");
+    dc1=0;
+  }
+  dc2=1;
+  if(dem%2!=0)
+  {
+    countx++;
+  }
+}
+ else if(a==0 && b>0 && dc2 == 1)
+{ 
+  
+  x_lui();
+  
+  
+  if(tg==1) 
+  {Serial.print("a");
+    dc2=0;
+  }
+  dc1=1;
+  if(dem%2!=0)
+  {
+    countx--;
+  }
+}
+
+else if(c>0 && d==0 )
+{
+  y_tien();
+  if(dem%2 !=0)
+  {
+    county++;
+  }
+}
+else if(c==0 && d>0)
+{
+  y_lui();
+  if(dem%2 !=0)
+  {
+    county--;
+  }
+}
+
+else if(e>0 && f==0 )
+{
+  z_tien();
+  if(dem%2 !=0)
+  {
+    countz++;
+  }
+}
+else if(e==0 && f>0)
+{
+  z_lui();
+  if(dem%2 !=0)
+  {
+    countz--;
+  }
+}
+ 
+Serial.print(dem);
+Serial.println("  ");
+//Serial.print(countx);
+//Serial.print("  ");
+//Serial.print(county);
+//Serial.print("  ");
+//Serial.println(countz);
+
+
+}
